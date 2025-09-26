@@ -3,7 +3,8 @@
 :: Set directory and delay time
 set C_Drive_Directorys=../..
 set Directorys="Hidden Features"
-set Delayed=1
+set Delay=1
+set /a Random_Delay=%random% %% 10 + 1
 
 :: List of feature IDs to toggle (ensure these IDs are correct for your version)
 set IDs=57048226 47205210 57048218 57857165 57994323 48433719 49453572 48822452 56328729 49221331 49381526 49402389 49820095 55495322
@@ -16,13 +17,13 @@ echo            Windows Feature Toggle Menu
 echo ================================================
 echo 1. Toggle Features
 echo 2. Restart PC
-echo 3. Exit
+echo 3. Exit The Script
 echo.
 set /p choice=Choose an option (1, 2, or 3): 
 
 if "%choice%"=="1" goto TOGGLE_FEATURES
 if "%choice%"=="2" goto RESTART
-if "%choice%"=="3" exit
+if "%choice%"=="3" exit /b
 goto MENU
 
 :: Toggle features function
@@ -40,25 +41,25 @@ echo ================================================
 echo         Windows Feature Toggle Script
 echo ================================================
 echo.
-timeout /t %Delayed% /nobreak >nul
+timeout /t %Delay% /nobreak >nul
 
 :: Navigating to the Hidden Features Directory
 echo Navigating to the "%Directorys%" directory...
-timeout /t %Delayed% /nobreak >nul
+timeout /t %Delay% /nobreak >nul
 cd %C_Drive_Directorys%
 cd %Directorys%
 
 :: Display progress
 echo.
-echo Toggling Windows Features (25H2)... Please wait.
-timeout /t %Delayed% /nobreak >nul
+echo Toggling Windows Features Please wait.
+timeout /t %Delay% /nobreak >nul
 cls
-timeout /t %Delayed% /nobreak >nul
+timeout /t %Delay% /nobreak >nul
 
 :: Loop through each ID and toggle
 for %%i in (%IDs%) do (
     echo Checking feature ID: %%i...
-
+    
     :: Check if feature is enabled or disabled, and toggle it
     for /f "tokens=* usebackq" %%a in (`vivetool /query /id:%%i 2^>nul`) do (
         echo %%a | findstr /i "Enabled" >nul
@@ -87,7 +88,7 @@ echo.
 echo ================================================
 echo            Feature Toggle Complete!
 echo ================================================
-timeout /t %Delayed% /nobreak >nul
+timeout /t %Random_Delay% /nobreak >nul
 cls
 
 :: Post-Toggle Menu for Restart or Exit
@@ -97,12 +98,12 @@ echo ================================================
 echo        Toggle Complete! Choose an action:
 echo ================================================
 echo 1. Restart PC
-echo 2. Exit
+echo 2. Exit The Script
 echo.
 set /p choice=Choose an option (1 or 2): 
 
 if "%choice%"=="1" goto RESTART
-if "%choice%"=="2" exit
+if "%choice%"=="2" exit /b
 goto POST_TOGGLE_MENU
 
 :: Restart function (manually restart the PC)
