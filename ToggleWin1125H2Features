@@ -5,14 +5,8 @@ set C_Drive_Directorys=../..
 set Directorys="Hidden Features"
 set Delayed=1
 
-:: List of feature IDs to toggle
+:: List of feature IDs to toggle (ensure these IDs are correct for your version)
 set IDs=57048226 47205210 57048218 57857165 57994323 48433719 49453572 48822452 56328729 49221331 49381526 49402389 49820095 55495322
-
-:: Function to request admin privileges (only if not already elevated)
-if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
-    call :ElevateToAdmin
-    exit /b
-)
 
 :: Main menu loop
 :MENU
@@ -31,18 +25,16 @@ if "%choice%"=="2" goto RESTART
 if "%choice%"=="3" exit
 goto MENU
 
-:: Function to elevate script to administrator
-:ElevateToAdmin
+:: Toggle features function
+:TOGGLE_FEATURES
 >nul 2>&1 net session
+
 if %errorLevel% neq 0 (
     echo Requesting administrator privileges...
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
-exit /b
 
-:: Toggle features function
-:TOGGLE_FEATURES
 cls
 echo ================================================
 echo         Windows Feature Toggle Script
@@ -58,7 +50,7 @@ cd %Directorys%
 
 :: Display progress
 echo.
-echo Toggling Windows Features (25H2)...
+echo Toggling Windows Features (25H2)... Please wait.
 timeout /t %Delayed% /nobreak >nul
 cls
 timeout /t %Delayed% /nobreak >nul
@@ -66,16 +58,26 @@ timeout /t %Delayed% /nobreak >nul
 :: Loop through each ID and toggle
 for %%i in (%IDs%) do (
     echo Checking feature ID: %%i...
+
+    :: Check if feature is enabled or disabled, and toggle it
     for /f "tokens=* usebackq" %%a in (`vivetool /query /id:%%i 2^>nul`) do (
         echo %%a | findstr /i "Enabled" >nul
         if not errorlevel 1 (
             echo Feature ID %%i is ENABLED. Disabling...
             vivetool /disable /id:%%i
-            echo Feature ID %%i is now DISABLED.
+            if %errorLevel% neq 0 (
+                echo Error disabling Feature ID %%i.
+            ) else (
+                echo Feature ID %%i is now DISABLED.
+            )
         ) else (
             echo Feature ID %%i is DISABLED. Enabling...
             vivetool /enable /id:%%i
-            echo Feature ID %%i is now ENABLED.
+            if %errorLevel% neq 0 (
+                echo Error enabling Feature ID %%i.
+            ) else (
+                echo Feature ID %%i is now ENABLED.
+            )
         )
     )
 )
