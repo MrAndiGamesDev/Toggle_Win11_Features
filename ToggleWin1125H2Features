@@ -1,0 +1,112 @@
+@echo off
+
+:: Set directory and delay time
+set C_Drive_Directorys=../..
+set Directorys="Hidden Features"
+set Delayed=1
+
+:: List of feature IDs to toggle
+set IDs=57048226 47205210 57048218 57857165 57994323 48433719 49453572 48822452 56328729 49221331 49381526 49402389 49820095 55495322
+
+:: Function to request admin privileges (only if not already elevated)
+if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
+    call :ElevateToAdmin
+    exit /b
+)
+
+:: Main menu loop
+:MENU
+cls
+echo ================================================
+echo            Windows Feature Toggle Menu
+echo ================================================
+echo 1. Toggle Features
+echo 2. Restart PC
+echo 3. Exit
+echo.
+set /p choice=Choose an option (1, 2, or 3): 
+
+if "%choice%"=="1" goto TOGGLE_FEATURES
+if "%choice%"=="2" goto RESTART
+if "%choice%"=="3" exit
+goto MENU
+
+:: Function to elevate script to administrator
+:ElevateToAdmin
+>nul 2>&1 net session
+if %errorLevel% neq 0 (
+    echo Requesting administrator privileges...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
+)
+exit /b
+
+:: Toggle features function
+:TOGGLE_FEATURES
+cls
+echo ================================================
+echo         Windows Feature Toggle Script
+echo ================================================
+echo.
+timeout /t %Delayed% /nobreak >nul
+
+:: Navigating to the Hidden Features Directory
+echo Navigating to the "%Directorys%" directory...
+timeout /t %Delayed% /nobreak >nul
+cd %C_Drive_Directorys%
+cd %Directorys%
+
+:: Display progress
+echo.
+echo Toggling Windows Features (25H2)...
+timeout /t %Delayed% /nobreak >nul
+cls
+timeout /t %Delayed% /nobreak >nul
+
+:: Loop through each ID and toggle
+for %%i in (%IDs%) do (
+    echo Checking feature ID: %%i...
+    for /f "tokens=* usebackq" %%a in (`vivetool /query /id:%%i 2^>nul`) do (
+        echo %%a | findstr /i "Enabled" >nul
+        if not errorlevel 1 (
+            echo Feature ID %%i is ENABLED. Disabling...
+            vivetool /disable /id:%%i
+            echo Feature ID %%i is now DISABLED.
+        ) else (
+            echo Feature ID %%i is DISABLED. Enabling...
+            vivetool /enable /id:%%i
+            echo Feature ID %%i is now ENABLED.
+        )
+    )
+)
+
+:: Process completion
+echo.
+echo ================================================
+echo            Feature Toggle Complete!
+echo ================================================
+timeout /t %Delayed% /nobreak >nul
+cls
+
+:: Post-Toggle Menu for Restart or Exit
+:POST_TOGGLE_MENU
+cls
+echo ================================================
+echo        Toggle Complete! Choose an action:
+echo ================================================
+echo 1. Restart PC
+echo 2. Exit
+echo.
+set /p choice=Choose an option (1 or 2): 
+
+if "%choice%"=="1" goto RESTART
+if "%choice%"=="2" exit
+goto POST_TOGGLE_MENU
+
+:: Restart function (manually restart the PC)
+:RESTART
+cls
+echo Restarting the PC now...
+timeout /t 2 /nobreak >nul
+shutdown /r /f /t 0
+exit /b
